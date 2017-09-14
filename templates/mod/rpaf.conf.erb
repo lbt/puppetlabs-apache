@@ -1,3 +1,11 @@
+# This file is managed by Puppet and all changes will be overwritten.
+#
+# See https://serverfault.com/questions/652279/apache-module-rpaf-documentation
+# for issues around rpaf module fork
+<% if @use_stderr_package -%>
+# This is the config for the http://www.stderr.net/apache/rpaf/
+# based package (used in Debian) Note that upstream seems to have gone away.
+#
 # Enable reverse proxy add forward
 RPAFenable On
 # RPAFsethostname will, when enabled, take the incoming X-Host header and
@@ -13,3 +21,57 @@ RPAFproxy_ips <%= Array(@proxy_ips).join(" ") %>
 # Setting RPAFheader allows you to change the header name to parse from the
 # default X-Forwarded-For to something of your choice.
 RPAFheader <%= @header %>
+<% else -%>
+# This is the config for the https://github.com/gnif/mod_rpaf
+# based package (used in Suse)
+#
+# Enable reverse proxy add forward
+RPAF_Enable On
+
+# RPAF_SetHostName will, when enabled, take the incoming X-Host header and
+# update the virtual host settings accordingly. This allows to have the same
+# hostnames as in the "real" configuration for the forwarding proxy so
+# ServerName & ServerAlias work
+<% if @sethostname -%>
+RPAF_SetHostName On
+<% else -%>
+RPAF_SetHostName Off
+<% end -%>
+
+# Which IPs & bitmasked subnets are forwarding requests to us
+# eg 127.0.0.1 10.0.0.0/24
+RPAF_ProxyIPs <%= Array(@proxy_ips).join(" ") %>
+
+# Setting RPAF_Header allows you to change the header name to parse from the
+# default X-Forwarded-For to something of your choice.
+RPAF_Header <%= @header %>
+
+# RPAF_SetHTTPS: (On|Off) Set the HTTPS environment variable to the header
+# value contained in X-HTTPS, or X-Forwarded-HTTPS. For best results
+# make sure that mod_ssl is NOT enabled.
+<% if @sethttps -%>
+RPAF_SetHTTPS On
+<% else -%>
+RPAF_SetHTTPS Off
+<% end %>
+
+# RPAF_SetPort: (On|Off) Set the server port to the header value contained
+# in X-Port, or X-Forwarded-Port. (See Issue #12)
+<% if @setport -%>
+RPAF_SetPort On
+<% else -%>
+RPAF_SetPort Off
+<% end %>
+
+
+# RPAF_ForbidIfNotProxy (On|Off) - Option to forbid request if not
+# from trusted RPAF_ProxyIPs; otherwise cannot be done with
+# Allow/Deny after remote addr substitution
+<% if @forbidifnotproxy -%>
+RPAF_ForbidIfNotProxy On
+<% else -%>
+RPAF_ForbidIfNotProxy Off
+<% end %>
+
+
+<% end -%>
